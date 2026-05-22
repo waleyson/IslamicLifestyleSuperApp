@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:islamic_super_app/modules/general/reminder/presentation/providers/reminder_provider.dart';
 import 'package:islamic_super_app/shared/services/media_playback_service.dart';
+import 'package:islamic_super_app/core/widgets/exit_dialog.dart';
 
 class ReminderDashboardScreen extends ConsumerWidget {
   const ReminderDashboardScreen({super.key});
@@ -22,7 +23,14 @@ class ReminderDashboardScreen extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Islamic Reminders')),
+      appBar: AppBar(
+        title: const Text('Islamic Reminders'),
+        leading: IconButton(
+          icon: const Icon(Icons.exit_to_app_outlined),
+          tooltip: 'Exit App',
+          onPressed: () => showExitConfirmationDialog(context),
+        ),
+      ),
       body: reminderState.when(
         data: (reminders) {
           if (reminders.isEmpty) {

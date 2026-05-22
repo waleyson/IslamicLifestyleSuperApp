@@ -38,9 +38,9 @@ class HomeScaffold extends ConsumerWidget {
             label: 'Quran',
           ),
           NavigationDestination(
-            icon: Icon(Icons.savings_outlined),
-            selectedIcon: Icon(Icons.savings),
-            label: 'Savings',
+            icon: Icon(Icons.business_center_outlined),
+            selectedIcon: Icon(Icons.business_center),
+            label: 'Business',
           ),
         ],
       ),

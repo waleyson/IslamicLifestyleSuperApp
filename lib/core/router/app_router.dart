@@ -7,7 +7,7 @@ import '../../modules/general/reminder/presentation/screens/reminder_dashboard_s
 import '../../modules/general/reminder/presentation/screens/create_reminder_screen.dart';
 import '../../modules/study/quran/presentation/screens/quran_home_screen.dart';
 import '../../modules/study/quran/presentation/screens/quran_audio_player_screen.dart';
-import '../../modules/business/savings/presentation/screens/savings_dashboard_screen.dart';
+import '../../modules/business/presentation/screens/business_dashboard_screen.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -61,7 +61,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/business',
-                builder: (context, state) => const SavingsDashboardScreen(),
+                builder: (context, state) => const BusinessDashboardScreen(),
               ),
             ],
           ),

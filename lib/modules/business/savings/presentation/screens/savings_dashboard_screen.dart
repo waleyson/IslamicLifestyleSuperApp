@@ -4,104 +4,111 @@ import '../providers/savings_provider.dart';
 import '../../data/models/savings_model.dart';
 
 class SavingsDashboardScreen extends ConsumerWidget {
-  const SavingsDashboardScreen({super.key});
+  final bool isNested;
+  const SavingsDashboardScreen({super.key, this.isNested = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final savingsAsync = ref.watch(savingsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Halal Savings')),
-      body: savingsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (goals) {
-          final totalSaved = goals.fold(0.0, (s, g) => s + g.currentAmount);
-          final totalTarget = goals.fold(0.0, (s, g) => s + g.targetAmount);
+    final body = savingsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (goals) {
+        final totalSaved = goals.fold(0.0, (s, g) => s + g.currentAmount);
+        final totalTarget = goals.fold(0.0, (s, g) => s + g.targetAmount);
 
-          return CustomScrollView(
-            slivers: [
-              // Summary Header Card
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: _SummaryCard(
-                    totalSaved: totalSaved,
-                    totalTarget: totalTarget,
-                    colorScheme: colorScheme,
-                  ),
+        return CustomScrollView(
+          slivers: [
+            // Summary Header Card
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: _SummaryCard(
+                  totalSaved: totalSaved,
+                  totalTarget: totalTarget,
+                  colorScheme: colorScheme,
                 ),
               ),
+            ),
 
-              // Riba-free note
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: colorScheme.tertiary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: colorScheme.tertiary.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Text('☪️', style: const TextStyle(fontSize: 18)),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'All savings are interest-free (riba-free) in compliance with Islamic finance principles.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colorScheme.onSurface.withValues(alpha: 0.7),
-                            ),
+            // Riba-free note
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: colorScheme.tertiary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: colorScheme.tertiary.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Text('☪️', style: const TextStyle(fontSize: 18)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'All savings are interest-free (riba-free) in compliance with Islamic finance principles.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+            ),
 
-              // Goals Header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                  child: Text(
-                    'Your Goals',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
+            // Goals Header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                child: Text(
+                  'Your Goals',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
               ),
+            ),
 
-              // Goal Cards
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final goal = goals[index];
-                      return _GoalCard(
-                        goal: goal,
-                        colorScheme: colorScheme,
-                        onContribute: () => _showContributeDialog(
-                            context, ref, goal),
-                      );
-                    },
-                    childCount: goals.length,
-                  ),
+            // Goal Cards
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final goal = goals[index];
+                    return _GoalCard(
+                      goal: goal,
+                      colorScheme: colorScheme,
+                      onContribute: () => _showContributeDialog(
+                          context, ref, goal),
+                    );
+                  },
+                  childCount: goals.length,
                 ),
               ),
-            ],
-          );
-        },
-      ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (isNested) {
+      return body;
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Halal Savings')),
+      body: body,
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddGoalDialog(context, ref),
+        onPressed: () => showAddGoalDialog(context, ref),
         icon: const Icon(Icons.add),
         label: const Text('New Goal'),
       ),
@@ -145,7 +152,7 @@ class SavingsDashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _showAddGoalDialog(BuildContext context, WidgetRef ref) {
+  void showAddGoalDialog(BuildContext context, WidgetRef ref) {
     final nameCtrl = TextEditingController();
     final targetCtrl = TextEditingController();
     const emojis = ['🕋', '🤲', '📚', '💰', '🏠', '✈️', '🎓', '❤️'];

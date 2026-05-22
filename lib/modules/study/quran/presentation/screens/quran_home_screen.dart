@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:islamic_super_app/modules/study/quran/presentation/providers/quran_audio_provider.dart';
 import 'package:islamic_super_app/modules/study/quran/presentation/providers/quran_list_provider.dart';
+import 'package:islamic_super_app/core/widgets/exit_dialog.dart';
 
 class QuranHomeScreen extends ConsumerStatefulWidget {
   const QuranHomeScreen({super.key});
@@ -29,6 +30,11 @@ class _QuranHomeScreenState extends ConsumerState<QuranHomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('القرآن الكريم'),
+        leading: IconButton(
+          icon: const Icon(Icons.exit_to_app_outlined),
+          tooltip: 'Exit App',
+          onPressed: () => showExitConfirmationDialog(context),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
