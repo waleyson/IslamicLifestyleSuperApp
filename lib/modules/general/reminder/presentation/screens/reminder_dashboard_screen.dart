@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../providers/reminder_provider.dart';
-import '../../../../shared/services/media_playback_service.dart';
+import 'package:islamic_super_app/modules/general/reminder/presentation/providers/reminder_provider.dart';
+import 'package:islamic_super_app/shared/services/media_playback_service.dart';
 
 class ReminderDashboardScreen extends ConsumerWidget {
   const ReminderDashboardScreen({super.key});
@@ -28,7 +28,7 @@ class ReminderDashboardScreen extends ConsumerWidget {
           if (reminders.isEmpty) {
             return Center(
               child: Column(
-                mainAxisAlignment: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.notifications_off_outlined,
                       size: 64, color: colorScheme.onSurface.withValues(alpha: 0.3)),

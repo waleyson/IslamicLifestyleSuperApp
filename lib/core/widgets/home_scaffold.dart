@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../modules/general/reminder/presentation/providers/reminder_provider.dart';
+import 'package:islamic_super_app/modules/general/reminder/presentation/providers/reminder_provider.dart';
 
 class HomeScaffold extends ConsumerWidget {
   final Widget child;

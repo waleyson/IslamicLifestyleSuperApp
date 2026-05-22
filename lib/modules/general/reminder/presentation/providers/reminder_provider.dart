@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../../data/models/reminder_model.dart';
-import '../../../../shared/services/notification_service.dart';
-import '../../../../shared/services/media_playback_service.dart';
-import '../../../../core/router/app_router.dart';
+import 'package:islamic_super_app/modules/general/reminder/data/models/reminder_model.dart';
+import 'package:islamic_super_app/shared/services/notification_service.dart';
+import 'package:islamic_super_app/shared/services/media_playback_service.dart';
+import 'package:islamic_super_app/core/router/app_router.dart';
 
 final reminderListProvider =
     AsyncNotifierProvider<ReminderNotifier, List<ReminderModel>>(

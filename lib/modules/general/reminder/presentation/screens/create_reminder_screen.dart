@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/reminder_model.dart';
-import '../providers/reminder_provider.dart';
-import '../../../study/quran/data/models/surah_model.dart';
-import '../../../study/quran/presentation/providers/quran_list_provider.dart';
-import '../../../../shared/services/media_playback_service.dart';
+import 'package:islamic_super_app/modules/general/reminder/data/models/reminder_model.dart';
+import 'package:islamic_super_app/modules/general/reminder/presentation/providers/reminder_provider.dart';
+import 'package:islamic_super_app/modules/study/quran/data/models/surah_model.dart';
+import 'package:islamic_super_app/modules/study/quran/presentation/providers/quran_list_provider.dart';
+import 'package:islamic_super_app/shared/services/media_playback_service.dart';
 
 class CreateReminderScreen extends ConsumerStatefulWidget {
   const CreateReminderScreen({super.key});
