@@ -2,11 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:just_audio/just_audio.dart';
 
 import 'package:islamic_super_app/modules/general/reminder/data/models/reminder_model.dart';
 import 'package:islamic_super_app/shared/services/notification_service.dart';
 import 'package:islamic_super_app/shared/services/media_playback_service.dart';
 import 'package:islamic_super_app/core/router/app_router.dart';
+import 'package:islamic_super_app/modules/study/quran/presentation/providers/quran_list_provider.dart';
 
 final reminderListProvider =
     AsyncNotifierProvider<ReminderNotifier, List<ReminderModel>>(
@@ -50,17 +52,22 @@ class ReminderNotifier extends AsyncNotifier<List<ReminderModel>> {
     final box = await Hive.openBox<ReminderModel>(_boxName);
     final r = box.get(id);
     if (r != null) {
-      final updated = ReminderModel(
-        id: r.id,
-        title: r.title,
-        scheduledTime: r.scheduledTime,
+      final updated = r.copyWith(
         isEnabled: !r.isEnabled,
-        isQuranReminder: r.isQuranReminder,
-        surahNumber: r.surahNumber,
-        surahName: r.surahName,
-        ayahNumber: r.ayahNumber,
-        ayahText: r.ayahText,
-        audioUrl: r.audioUrl,
+        clearSnoozeTime: true,
+      );
+      await box.put(id, updated);
+      state = AsyncData(box.values.toList());
+    }
+  }
+
+  Future<void> snoozeReminder(String id, DateTime snoozeTime) async {
+    final box = await Hive.openBox<ReminderModel>(_boxName);
+    final r = box.get(id);
+    if (r != null) {
+      final updated = r.copyWith(
+        isEnabled: true,
+        snoozeTime: snoozeTime,
       );
       await box.put(id, updated);
       state = AsyncData(box.values.toList());
@@ -74,6 +81,38 @@ class ReminderNotifier extends AsyncNotifier<List<ReminderModel>> {
   }
 }
 
+/// Helper function to calculate the next recurrence scheduled time safely.
+DateTime calculateNextScheduledTime(DateTime current, String recurrence) {
+  DateTime next = current;
+  final now = DateTime.now();
+  do {
+    switch (recurrence) {
+      case 'hourly':
+        next = next.add(const Duration(hours: 1));
+        break;
+      case 'daily':
+        next = next.add(const Duration(days: 1));
+        break;
+      case 'weekly':
+        next = next.add(const Duration(days: 7));
+        break;
+      case 'monthly':
+        final year = next.month == 12 ? next.year + 1 : next.year;
+        final month = next.month == 12 ? 1 : next.month + 1;
+        int day = next.day;
+        final daysInNextMonth = DateUtils.getDaysInMonth(year, month);
+        if (day > daysInNextMonth) {
+          day = daysInNextMonth;
+        }
+        next = DateTime(year, month, day, next.hour, next.minute, next.second, next.millisecond, next.microsecond);
+        break;
+      default:
+        return next;
+    }
+  } while (next.isBefore(now));
+  return next;
+}
+
 // Foreground/Background Scheduler Provider
 final reminderSchedulerProvider = Provider<void>((ref) {
   Timer? timer;
@@ -84,34 +123,73 @@ final reminderSchedulerProvider = Provider<void>((ref) {
     final now = DateTime.now();
 
     for (final reminder in reminders) {
-      if (reminder.isEnabled && reminder.scheduledTime.isBefore(now)) {
-        // 1. Disable the reminder in DB so it doesn't trigger again
-        await ref.read(reminderListProvider.notifier).toggleReminder(reminder.id);
+      if (reminder.isEnabled) {
+        final isSnoozed = reminder.snoozeTime != null;
+        final triggerTime = isSnoozed ? reminder.snoozeTime! : reminder.scheduledTime;
 
-        // 2. Show notification
-        final notificationService = ref.read(notificationServiceProvider);
-        notificationService.showNotification(
-          id: reminder.id.hashCode,
-          title: reminder.isQuranReminder
-              ? 'Quran Verse: Surah ${reminder.surahName}'
-              : reminder.title,
-          body: reminder.isQuranReminder
-              ? 'Ayah ${reminder.ayahNumber}: ${reminder.ayahText}'
-              : 'It\'s time for your reminder!',
-        );
+        if (triggerTime.isBefore(now)) {
+          // 1. Shift scheduledTime or disable, and clear snoozeTime
+          final box = await Hive.openBox<ReminderModel>('reminders_box');
+          final r = box.get(reminder.id);
+          if (r != null) {
+            final isSnoozeTrigger = r.snoozeTime != null;
+            ReminderModel updated;
+            if (isSnoozeTrigger) {
+              if (r.recurrence == 'once') {
+                updated = r.copyWith(
+                  isEnabled: false,
+                  clearSnoozeTime: true,
+                );
+              } else {
+                updated = r.copyWith(
+                  clearSnoozeTime: true,
+                );
+              }
+            } else {
+              if (r.recurrence == 'once') {
+                updated = r.copyWith(
+                  isEnabled: false,
+                  clearSnoozeTime: true,
+                );
+              } else {
+                final nextTime = calculateNextScheduledTime(r.scheduledTime, r.recurrence);
+                updated = r.copyWith(
+                  scheduledTime: nextTime,
+                  clearSnoozeTime: true,
+                );
+              }
+            }
+            await box.put(r.id, updated);
+            ref.read(reminderListProvider.notifier).state = AsyncData(box.values.toList());
+          }
 
-        // 3. Play Quran verse if applicable, and show dialog
-        if (reminder.isQuranReminder && reminder.audioUrl != null) {
-          final mediaService = ref.read(mediaPlaybackServiceProvider);
-          await mediaService.playAudioFromUrl(reminder.audioUrl!);
+          // 2. Show notification
+          final notificationService = ref.read(notificationServiceProvider);
+          notificationService.showNotification(
+            id: reminder.id.hashCode,
+            title: reminder.isQuranReminder
+                ? 'Quran Verse: Surah ${reminder.surahName}'
+                : reminder.title,
+            body: reminder.isQuranReminder
+                ? (reminder.endAyahNumber != null && reminder.endAyahNumber! > reminder.ayahNumber!
+                    ? 'Ayahs ${reminder.ayahNumber}-${reminder.endAyahNumber}: ${reminder.ayahText}'
+                    : 'Ayah ${reminder.ayahNumber}: ${reminder.ayahText}')
+                : 'It\'s time for your reminder!',
+          );
 
-          final context = rootNavigatorKey.currentContext;
-          if (context != null && context.mounted) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (ctx) => _QuranReminderDialog(reminder: reminder),
-            );
+          // 3. Play Quran verse if applicable, and show dialog
+          if (reminder.isQuranReminder) {
+            final context = rootNavigatorKey.currentContext;
+            if (context != null && context.mounted) {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (ctx) => _QuranReminderDialog(reminder: reminder),
+              );
+            } else if (reminder.audioUrl != null) {
+              final mediaService = ref.read(mediaPlaybackServiceProvider);
+              await mediaService.playAudioFromUrl(reminder.audioUrl!);
+            }
           }
         }
       }
@@ -127,15 +205,104 @@ final reminderSchedulerProvider = Provider<void>((ref) {
   });
 });
 
-class _QuranReminderDialog extends ConsumerWidget {
+class _QuranReminderDialog extends ConsumerStatefulWidget {
   final ReminderModel reminder;
 
   const _QuranReminderDialog({required this.reminder});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_QuranReminderDialog> createState() => _QuranReminderDialogState();
+}
+
+class _QuranReminderDialogState extends ConsumerState<_QuranReminderDialog> {
+  late int _currentAyah;
+  late String _currentText;
+  String? _currentAudioUrl;
+  bool _isLoading = false;
+  String? _error;
+  StreamSubscription? _playerStateSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentAyah = widget.reminder.ayahNumber ?? 1;
+    _currentText = widget.reminder.ayahText ?? '';
+    _currentAudioUrl = widget.reminder.audioUrl;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _playCurrent();
+      _listenToPlayback();
+    });
+  }
+
+  @override
+  void dispose() {
+    _playerStateSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _listenToPlayback() {
+    final mediaService = ref.read(mediaPlaybackServiceProvider);
+    _playerStateSubscription = mediaService.playerStateStream.listen((state) {
+      if (state.processingState == ProcessingState.completed) {
+        _onAudioCompleted();
+      }
+    });
+  }
+
+  Future<void> _playCurrent() async {
+    if (_currentAudioUrl == null) return;
+    try {
+      final mediaService = ref.read(mediaPlaybackServiceProvider);
+      await mediaService.playAudioFromUrl(_currentAudioUrl!);
+    } catch (e) {
+      debugPrint("Playback error: $e");
+    }
+  }
+
+  Future<void> _fetchAndPlayNext(int nextAyah) async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final repo = ref.read(quranRepositoryProvider);
+      final data = await repo.fetchAyah(widget.reminder.surahNumber!, nextAyah);
+      if (mounted) {
+        setState(() {
+          _currentAyah = nextAyah;
+          _currentText = data['text'] as String? ?? '';
+          _currentAudioUrl = data['audio'] as String?;
+          _isLoading = false;
+        });
+        await _playCurrent();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = "Failed to load next verse. Tap retry or skip.";
+        });
+      }
+    }
+  }
+
+  void _onAudioCompleted() {
+    final endAyah = widget.reminder.endAyahNumber ?? widget.reminder.ayahNumber ?? 1;
+    if (_currentAyah < endAyah) {
+      _fetchAndPlayNext(_currentAyah + 1);
+    } else {
+      ref.read(mediaPlaybackServiceProvider).stop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final mediaService = ref.watch(mediaPlaybackServiceProvider);
     final colorScheme = Theme.of(context).colorScheme;
+    final hasRange = widget.reminder.endAyahNumber != null &&
+        widget.reminder.endAyahNumber! > (widget.reminder.ayahNumber ?? 1);
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -164,7 +331,10 @@ class _QuranReminderDialog extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Surah ${reminder.surahName} • Ayah ${reminder.ayahNumber}',
+              hasRange
+                  ? 'Surah ${widget.reminder.surahName} • Ayah $_currentAyah (Range: ${widget.reminder.ayahNumber}-${widget.reminder.endAyahNumber})'
+                  : 'Surah ${widget.reminder.surahName} • Ayah $_currentAyah',
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -188,16 +358,39 @@ class _QuranReminderDialog extends ConsumerWidget {
                   ),
                 ),
                 child: SingleChildScrollView(
-                  child: Text(
-                    reminder.ayahText ?? '',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      height: 1.6,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Amiri',
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      : Column(
+                          children: [
+                            Text(
+                              _currentText,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 22,
+                                height: 1.6,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Amiri',
+                              ),
+                            ),
+                            if (_error != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                _error!,
+                                style: TextStyle(color: colorScheme.error, fontSize: 12),
+                                textAlign: TextAlign.center,
+                              ),
+                              TextButton(
+                                onPressed: () => _fetchAndPlayNext(_currentAyah),
+                                child: const Text('Retry'),
+                              ),
+                            ],
+                          ],
+                        ),
                 ),
               ),
             ),
@@ -208,42 +401,89 @@ class _QuranReminderDialog extends ConsumerWidget {
               stream: mediaService.playingStream,
               builder: (context, snapshot) {
                 final isPlaying = snapshot.data ?? false;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        if (isPlaying) {
-                          await mediaService.pause();
-                        } else {
-                          if (reminder.audioUrl != null) {
-                            await mediaService.playAudioFromUrl(reminder.audioUrl!);
-                          }
-                        }
-                      },
-                      icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-                      label: Text(isPlaying ? 'Pause' : 'Play'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.secondaryContainer,
-                        foregroundColor: colorScheme.onSecondaryContainer,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _isLoading
+                              ? null
+                              : () async {
+                                  if (isPlaying) {
+                                    await mediaService.pause();
+                                  } else {
+                                    if (_currentAudioUrl != null) {
+                                      await mediaService.playAudioFromUrl(_currentAudioUrl!);
+                                    }
+                                  }
+                                },
+                          icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                          label: Text(isPlaying ? 'Pause' : 'Play'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.secondaryContainer,
+                            foregroundColor: colorScheme.onSecondaryContainer,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
-                      ),
+                        // Snooze Button
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            await mediaService.stop();
+                            // Snooze for 5 minutes
+                            final snoozeTime = DateTime.now().add(const Duration(minutes: 5));
+                            await ref.read(reminderListProvider.notifier).snoozeReminder(
+                                  widget.reminder.id,
+                                  snoozeTime,
+                                );
+                            if (context.mounted) Navigator.of(context).pop();
+                          },
+                          icon: const Icon(Icons.snooze),
+                          label: const Text('Snooze (5m)'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.surfaceContainerHighest,
+                            foregroundColor: colorScheme.onSurfaceVariant,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: colorScheme.outline.withValues(alpha: 0.2),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        await mediaService.stop();
-                        if (context.mounted) Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (hasRange && _currentAyah < widget.reminder.endAyahNumber!)
+                          TextButton.icon(
+                            onPressed: _isLoading
+                                ? null
+                                : () => _fetchAndPlayNext(_currentAyah + 1),
+                            icon: const Icon(Icons.skip_next),
+                            label: const Text('Skip Verse'),
+                          ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await mediaService.stop();
+                            if (context.mounted) Navigator.of(context).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            minimumSize: const Size(120, 40),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text('Dismiss'),
                         ),
-                      ),
-                      child: const Text('Dismiss'),
+                      ],
                     ),
                   ],
                 );
@@ -255,3 +495,4 @@ class _QuranReminderDialog extends ConsumerWidget {
     );
   }
 }
+

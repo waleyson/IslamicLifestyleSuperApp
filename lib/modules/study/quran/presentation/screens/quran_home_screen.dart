@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../providers/quran_audio_provider.dart';
-import '../providers/quran_list_provider.dart';
+import 'package:islamic_super_app/modules/study/quran/presentation/providers/quran_audio_provider.dart';
+import 'package:islamic_super_app/modules/study/quran/presentation/providers/quran_list_provider.dart';
 
 class QuranHomeScreen extends ConsumerStatefulWidget {
   const QuranHomeScreen({super.key});

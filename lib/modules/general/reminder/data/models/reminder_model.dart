@@ -32,6 +32,15 @@ class ReminderModel extends HiveObject {
   @HiveField(9)
   final String? audioUrl;
 
+  @HiveField(10)
+  final int? endAyahNumber;
+
+  @HiveField(11)
+  final String recurrence; // 'once', 'hourly', 'daily', 'weekly', 'monthly'
+
+  @HiveField(12)
+  final DateTime? snoozeTime;
+
   ReminderModel({
     required this.id,
     required this.title,
@@ -43,7 +52,43 @@ class ReminderModel extends HiveObject {
     this.ayahNumber,
     this.ayahText,
     this.audioUrl,
+    this.endAyahNumber,
+    this.recurrence = 'once',
+    this.snoozeTime,
   });
+
+  ReminderModel copyWith({
+    String? id,
+    String? title,
+    DateTime? scheduledTime,
+    bool? isEnabled,
+    bool? isQuranReminder,
+    int? surahNumber,
+    String? surahName,
+    int? ayahNumber,
+    String? ayahText,
+    String? audioUrl,
+    int? endAyahNumber,
+    String? recurrence,
+    DateTime? snoozeTime,
+    bool clearSnoozeTime = false,
+  }) {
+    return ReminderModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      scheduledTime: scheduledTime ?? this.scheduledTime,
+      isEnabled: isEnabled ?? this.isEnabled,
+      isQuranReminder: isQuranReminder ?? this.isQuranReminder,
+      surahNumber: surahNumber ?? this.surahNumber,
+      surahName: surahName ?? this.surahName,
+      ayahNumber: ayahNumber ?? this.ayahNumber,
+      ayahText: ayahText ?? this.ayahText,
+      audioUrl: audioUrl ?? this.audioUrl,
+      endAyahNumber: endAyahNumber ?? this.endAyahNumber,
+      recurrence: recurrence ?? this.recurrence,
+      snoozeTime: clearSnoozeTime ? null : (snoozeTime ?? this.snoozeTime),
+    );
+  }
 }
 
 // Manual Adapter since hive_generator failed
@@ -68,13 +113,16 @@ class ReminderModelAdapter extends TypeAdapter<ReminderModel> {
       ayahNumber: fields[7] as int?,
       ayahText: fields[8] as String?,
       audioUrl: fields[9] as String?,
+      endAyahNumber: fields[10] as int?,
+      recurrence: fields[11] as String? ?? 'once',
+      snoozeTime: fields[12] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ReminderModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -94,6 +142,13 @@ class ReminderModelAdapter extends TypeAdapter<ReminderModel> {
       ..writeByte(8)
       ..write(obj.ayahText)
       ..writeByte(9)
-      ..write(obj.audioUrl);
+      ..write(obj.audioUrl)
+      ..writeByte(10)
+      ..write(obj.endAyahNumber)
+      ..writeByte(11)
+      ..write(obj.recurrence)
+      ..writeByte(12)
+      ..write(obj.snoozeTime);
   }
 }
+

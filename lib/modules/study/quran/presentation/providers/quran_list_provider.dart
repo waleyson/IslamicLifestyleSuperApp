@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/models/surah_model.dart';
-import '../../data/repositories/quran_repository.dart';
+import 'package:islamic_super_app/modules/study/quran/data/models/surah_model.dart';
+import 'package:islamic_super_app/modules/study/quran/data/repositories/quran_repository.dart';
 
 final quranRepositoryProvider = Provider<QuranRepository>((ref) {
   return QuranRepository();

@@ -25,6 +25,8 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
   bool _isQuranReminder = false;
   SurahModel? _selectedSurah;
   int _selectedAyahNumber = 1;
+  int? _endAyahNumber;
+  String _selectedRecurrence = 'once';
   bool _isLoadingAyah = false;
   String? _fetchedAyahText;
   String? _fetchedAudioUrl;
@@ -68,6 +70,7 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
     setState(() {
       _selectedSurah = surah;
       _selectedAyahNumber = 1;
+      _endAyahNumber = 1;
       _fetchedAyahText = null;
       _fetchedAudioUrl = null;
     });
@@ -78,6 +81,9 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
   void _onAyahChanged(int ayahNum) {
     setState(() {
       _selectedAyahNumber = ayahNum;
+      if (_endAyahNumber == null || _endAyahNumber! < ayahNum) {
+        _endAyahNumber = ayahNum;
+      }
       _fetchedAyahText = null;
       _fetchedAudioUrl = null;
     });
@@ -126,7 +132,9 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
 
     final titleText = _titleController.text.trim();
     final reminderTitle = _isQuranReminder
-        ? 'Quran: Surah ${_selectedSurah?.englishName}, Ayah $_selectedAyahNumber'
+        ? (_endAyahNumber != null && _endAyahNumber! > _selectedAyahNumber
+            ? 'Quran: Surah ${_selectedSurah?.englishName}, Ayahs $_selectedAyahNumber-$_endAyahNumber'
+            : 'Quran: Surah ${_selectedSurah?.englishName}, Ayah $_selectedAyahNumber')
         : titleText;
 
     final reminder = ReminderModel(
@@ -139,6 +147,8 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
       ayahNumber: _selectedAyahNumber,
       ayahText: _fetchedAyahText,
       audioUrl: _fetchedAudioUrl,
+      endAyahNumber: _isQuranReminder ? _endAyahNumber : null,
+      recurrence: _selectedRecurrence,
     );
     await ref.read(reminderListProvider.notifier).addReminder(reminder);
 
@@ -249,29 +259,64 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                           ),
                       const SizedBox(height: 16),
 
-                      // Ayah Dropdown
+                      // Start & End Ayah Dropdowns Side-by-Side
                       if (_selectedSurah != null) ...[
-                        DropdownButtonFormField<int>(
-                          decoration: InputDecoration(
-                            labelText: 'Select Ayah (Verse)',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<int>(
+                                decoration: InputDecoration(
+                                  labelText: 'Start Ayah',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                ),
+                                value: _selectedAyahNumber,
+                                items: List.generate(
+                                  _selectedSurah!.numberOfAyahs,
+                                  (i) => i + 1,
+                                ).map((ayahNum) {
+                                  return DropdownMenuItem<int>(
+                                    value: ayahNum,
+                                    child: Text('Ayah $ayahNum'),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) _onAyahChanged(val);
+                                },
+                              ),
                             ),
-                            prefixIcon: const Icon(Icons.format_list_numbered),
-                          ),
-                          value: _selectedAyahNumber,
-                          items: List.generate(
-                            _selectedSurah!.numberOfAyahs,
-                            (i) => i + 1,
-                          ).map((ayahNum) {
-                            return DropdownMenuItem<int>(
-                              value: ayahNum,
-                              child: Text('Ayah $ayahNum'),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            if (val != null) _onAyahChanged(val);
-                          },
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: DropdownButtonFormField<int>(
+                                decoration: InputDecoration(
+                                  labelText: 'End Ayah',
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                ),
+                                value: _endAyahNumber ?? _selectedAyahNumber,
+                                items: List.generate(
+                                  _selectedSurah!.numberOfAyahs - _selectedAyahNumber + 1,
+                                  (i) => _selectedAyahNumber + i,
+                                ).map((ayahNum) {
+                                  return DropdownMenuItem<int>(
+                                    value: ayahNum,
+                                    child: Text('Ayah $ayahNum'),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  if (val != null) {
+                                    setState(() {
+                                      _endAyahNumber = val;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
 
@@ -386,6 +431,41 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 24),
+
+            // Recurrence Configuration
+            Text('Recurrence',
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: const Icon(Icons.repeat),
+                filled: true,
+                fillColor: colorScheme.surfaceContainerHighest,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              value: _selectedRecurrence,
+              items: const [
+                DropdownMenuItem(value: 'once', child: Text('Once')),
+                DropdownMenuItem(value: 'hourly', child: Text('Hourly')),
+                DropdownMenuItem(value: 'daily', child: Text('Daily')),
+                DropdownMenuItem(value: 'weekly', child: Text('Weekly')),
+                DropdownMenuItem(value: 'monthly', child: Text('Monthly')),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() {
+                    _selectedRecurrence = val;
+                  });
+                }
+              },
             ),
             const SizedBox(height: 32),
 
