@@ -22,4 +22,10 @@ class QuranRepository {
         .map((json) => SurahModel.fromJson(json as Map<String, dynamic>))
         .toList();
   }
+
+  /// Fetches a specific Ayah by Surah number and Ayah number.
+  Future<Map<String, dynamic>> fetchAyah(int surahNumber, int ayahNumber) async {
+    final response = await _dio.get('/ayah/$surahNumber:$ayahNumber/ar.alafasy');
+    return response.data['data'] as Map<String, dynamic>;
+  }
 }

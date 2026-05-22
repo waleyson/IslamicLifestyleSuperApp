@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../modules/general/reminder/presentation/providers/reminder_provider.dart';
 
-class HomeScaffold extends StatelessWidget {
+class HomeScaffold extends ConsumerWidget {
   final Widget child;
   final int currentIndex;
   final Function(int) onNavigate;
@@ -13,7 +15,10 @@ class HomeScaffold extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Keep the periodic reminder trigger check active
+    ref.watch(reminderSchedulerProvider);
+
     return Scaffold(
       body: child,
       bottomNavigationBar: NavigationBar(

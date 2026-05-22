@@ -9,22 +9,22 @@ import '../../modules/study/quran/presentation/screens/quran_home_screen.dart';
 import '../../modules/study/quran/presentation/screens/quran_audio_player_screen.dart';
 import '../../modules/business/savings/presentation/screens/savings_dashboard_screen.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/general',
     routes: [
       // Full-screen routes (outside shell)
       GoRoute(
         path: '/quran_player',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const QuranAudioPlayerScreen(),
       ),
       GoRoute(
         path: '/create_reminder',
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const CreateReminderScreen(),
       ),
 

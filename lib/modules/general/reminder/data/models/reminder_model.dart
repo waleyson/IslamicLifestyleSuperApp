@@ -14,11 +14,35 @@ class ReminderModel extends HiveObject {
   @HiveField(3)
   final bool isEnabled;
 
+  @HiveField(4)
+  final bool isQuranReminder;
+
+  @HiveField(5)
+  final int? surahNumber;
+
+  @HiveField(6)
+  final String? surahName;
+
+  @HiveField(7)
+  final int? ayahNumber;
+
+  @HiveField(8)
+  final String? ayahText;
+
+  @HiveField(9)
+  final String? audioUrl;
+
   ReminderModel({
     required this.id,
     required this.title,
     required this.scheduledTime,
     this.isEnabled = true,
+    this.isQuranReminder = false,
+    this.surahNumber,
+    this.surahName,
+    this.ayahNumber,
+    this.ayahText,
+    this.audioUrl,
   });
 }
 
@@ -38,13 +62,19 @@ class ReminderModelAdapter extends TypeAdapter<ReminderModel> {
       title: fields[1] as String,
       scheduledTime: fields[2] as DateTime,
       isEnabled: fields[3] as bool,
+      isQuranReminder: fields[4] as bool? ?? false,
+      surahNumber: fields[5] as int?,
+      surahName: fields[6] as String?,
+      ayahNumber: fields[7] as int?,
+      ayahText: fields[8] as String?,
+      audioUrl: fields[9] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ReminderModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -52,6 +82,18 @@ class ReminderModelAdapter extends TypeAdapter<ReminderModel> {
       ..writeByte(2)
       ..write(obj.scheduledTime)
       ..writeByte(3)
-      ..write(obj.isEnabled);
+      ..write(obj.isEnabled)
+      ..writeByte(4)
+      ..write(obj.isQuranReminder)
+      ..writeByte(5)
+      ..write(obj.surahNumber)
+      ..writeByte(6)
+      ..write(obj.surahName)
+      ..writeByte(7)
+      ..write(obj.ayahNumber)
+      ..writeByte(8)
+      ..write(obj.ayahText)
+      ..writeByte(9)
+      ..write(obj.audioUrl);
   }
 }

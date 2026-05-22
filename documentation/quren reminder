@@ -1,0 +1,67 @@
+Implementation Plan - Quran Verse Reminders
+This plan introduces a feature allowing users to set up a reminder with a specific Quran verse (Ayah). When the scheduled time is reached, the application will:
+
+Trigger a local notification with the verse details.
+Natively play the verse audio.
+If the app is in the foreground, display a beautiful, premium overlay dialog with the Arabic text of the verse and playback controls.
+User Review Required
+NOTE
+
+Reminders will now be persistent using a Hive box (reminders_box) instead of mock in-memory lists, making the reminder feature fully functional.
+
+Proposed Changes
+1. Data Model & Repository Layer
+[MODIFY] 
+reminder_model.dart
+Update ReminderModel to support Quran-related fields:
+bool isQuranReminder
+int? surahNumber
+String? surahName
+int? ayahNumber
+String? ayahText
+String? audioUrl
+Update ReminderModelAdapter to read and write fields 4 through 9 for Hive storage, ensuring backward compatibility.
+[MODIFY] 
+quran_repository.dart
+Add a fetchAyah(int surahNumber, int ayahNumber) method to query /ayah/$surahNumber:$ayahNumber/ar.alafasy from the Alquran API to retrieve the verse text and audio URL.
+2. State & Scheduling Layer
+[MODIFY] 
+app_router.dart
+Make _rootNavigatorKey a public top-level variable rootNavigatorKey so it can be accessed by the scheduler to display foreground dialogs.
+[MODIFY] 
+reminder_provider.dart
+Update ReminderNotifier to open reminders_box and fetch, add, update, and delete reminders to/from Hive.
+Add deleteReminder(String id).
+Implement reminderSchedulerProvider which initializes a Timer.periodic checking every 10 seconds:
+Finds any enabled reminder where scheduledTime is in the past.
+Automatically toggles it to disabled.
+Shows a local notification with the verse info.
+If a Quran reminder is triggered, plays the ayah audio.
+If the app is in the foreground, opens a dialog displaying the Arabic verse text, surah name, translation, and media play/pause controls.
+3. UI Screens
+[MODIFY] 
+create_reminder_screen.dart
+Add a "Play Quran Verse" section with a switch.
+If enabled, display:
+A dropdown selector for the Surah (populated from quranListProvider).
+An Ayah number selector (populated dynamically up to surah.numberOfAyahs).
+A beautiful preview container that fetches the Ayah text and shows it in Amiri font with gold borders.
+A "Play/Stop Preview" button.
+Modify the _save() function to write Quran fields into the model.
+[MODIFY] 
+reminder_dashboard_screen.dart
+Enhance reminder list items:
+Display a distinct icon for Quran reminders (e.g. Icons.menu_book or Icons.music_note).
+Show the selected Surah and Ayah under the scheduled time.
+Support swipe-to-dismiss or a delete button to delete reminders.
+Allow quick playback of the reminder directly from the dashboard.
+Verification Plan
+Automated Tests
+Run flutter test (if unit tests exist) to ensure no regressions are introduced.
+Manual Verification
+Create a general reminder and verify it displays and deletes properly.
+Create a Quran verse reminder and:
+Select Surah 1 (Al-Fatiha) and Ayah 1.
+Verify the Arabic preview is displayed and the audio preview plays correctly.
+Schedule the reminder 20 seconds into the future.
+Verify that the notification pops up and, if the app is open, the custom trigger overlay dialog is shown and plays the audio automatically.
