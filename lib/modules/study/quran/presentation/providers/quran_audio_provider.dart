@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quran/quran.dart' as quran;
 import 'package:islamic_super_app/shared/services/media_playback_service.dart';
 import 'package:islamic_super_app/modules/study/quran/data/models/surah_model.dart';
 
@@ -22,9 +23,14 @@ class QuranAudioNotifier {
 
   QuranAudioNotifier(this._mediaService, this._ref);
 
-  Future<void> playSurah(SurahModel surah) async {
+  Future<void> playSurah(SurahModel surah, {int startVerseIndex = 0}) async {
     _ref.read(currentSurahProvider.notifier).setSurah(surah);
-    await _mediaService.playAudioFromUrl(surah.audioUrl);
+    final totalVerses = quran.getVerseCount(surah.number);
+    final urls = List.generate(
+      totalVerses,
+      (index) => quran.getAudioURLByVerse(surah.number, index + 1),
+    );
+    await _mediaService.playPlaylist(urls, initialIndex: startVerseIndex);
   }
 
   Future<void> togglePlayPause(bool isPlaying) async {
@@ -39,7 +45,15 @@ class QuranAudioNotifier {
     await _mediaService.seek(position);
   }
 
-  Future<void> skipForward() async {
-    // Skipping 10 seconds logic requires knowing current position, handled in UI or here
+  Future<void> playVerse(int verseIndex) async {
+    await _mediaService.seekToIndex(verseIndex);
+  }
+
+  Future<void> nextVerse() async {
+    await _mediaService.next();
+  }
+
+  Future<void> previousVerse() async {
+    await _mediaService.previous();
   }
 }

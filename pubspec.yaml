@@ -47,6 +47,7 @@ dependencies:
   flutter_secure_storage: ^10.2.0
   google_fonts: ^6.2.1
   adhan: ^2.0.0+1
+  quran: ^1.4.1
 
 dev_dependencies:
   flutter_test:
