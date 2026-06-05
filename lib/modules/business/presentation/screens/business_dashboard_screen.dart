@@ -12,10 +12,12 @@ class BusinessDashboardScreen extends ConsumerStatefulWidget {
   const BusinessDashboardScreen({super.key});
 
   @override
-  ConsumerState<BusinessDashboardScreen> createState() => _BusinessDashboardScreenState();
+  ConsumerState<BusinessDashboardScreen> createState() =>
+      _BusinessDashboardScreenState();
 }
 
-class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScreen>
+class _BusinessDashboardScreenState
+    extends ConsumerState<BusinessDashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   int _currentTabIndex = 0;
@@ -25,7 +27,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
-      if (_tabController.indexIsChanging || _tabController.index != _currentTabIndex) {
+      if (_tabController.indexIsChanging ||
+          _tabController.index != _currentTabIndex) {
         setState(() {
           _currentTabIndex = _tabController.index;
         });
@@ -51,6 +54,13 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
           tooltip: 'Exit App',
           onPressed: () => showExitConfirmationDialog(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            tooltip: 'Ethical Guidelines',
+            onPressed: () => _showEthicalHub(context),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: colorScheme.secondary,
@@ -119,6 +129,141 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
     return null;
   }
 
+  void _showEthicalHub(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  const Text('☪️', style: TextStyle(fontSize: 22)),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Halal & Ethical Finance Hub',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'According to Islamic traditions, wealth should be managed with strict ethical, social, and religious standards. Here are the core principles driving our financial modules:',
+                style: TextStyle(fontSize: 13, height: 1.4),
+              ),
+              const SizedBox(height: 16),
+              _buildEthicalSection(
+                context,
+                title: 'Riba-Free Halal Savings',
+                icon: Icons.savings_outlined,
+                color: Colors.green,
+                description: 'All savings tracked in this app are strictly interest-free (Riba-free). Islamic financial tradition forbids earning or paying interest. Wealth preservation must be grounded in actual value and ethical endeavors.',
+              ),
+              const SizedBox(height: 12),
+              _buildEthicalSection(
+                context,
+                title: 'Shariah-Compliant Investment',
+                icon: Icons.trending_up,
+                color: Colors.blue,
+                description: 'Ethical investments exclude businesses involved in prohibited activities (e.g. alcohol, gambling, arms, interest-based banking, pork). Shariah screening also checks leverage and cash-to-asset ratios to ensure authentic equity sharing.',
+              ),
+              const SizedBox(height: 12),
+              _buildEthicalSection(
+                context,
+                title: 'Qard Al-Hasan (Benevolent Loan)',
+                icon: Icons.handshake_outlined,
+                color: Colors.teal,
+                description: 'Lending is considered an act of charity rather than a commercial mechanism in Islam. A Qard loan is strictly interest-free. Creditors are encouraged to show patience and grant extensions if the borrower faces genuine hardship.',
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Understand & Proceed'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEthicalSection(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required Color color,
+    required String description,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 1),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 11,
+                    height: 1.4,
+                    color: colorScheme.onSurface.withValues(alpha: 0.75),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ==================== INVESTMENT TAB BUILDERS ====================
 
   Widget _buildInvestmentTab(BuildContext context, ColorScheme colorScheme) {
@@ -131,7 +276,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
         final totalInvested = assets.fold(0.0, (s, a) => s + a.amountInvested);
         final totalCurrent = assets.fold(0.0, (s, a) => s + a.currentValue);
         final totalReturn = totalCurrent - totalInvested;
-        final returnPercentage = totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0.0;
+        final returnPercentage =
+            totalInvested > 0 ? (totalReturn / totalInvested) * 100 : 0.0;
 
         return CustomScrollView(
           slivers: [
@@ -143,7 +289,10 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [colorScheme.primaryContainer, colorScheme.primary],
+                      colors: [
+                        colorScheme.primaryContainer,
+                        colorScheme.primary
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -162,7 +311,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                       Text(
                         'Total Investment Portfolio',
                         style: TextStyle(
-                          color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                          color: colorScheme.onPrimaryContainer
+                              .withValues(alpha: 0.8),
                           fontSize: 13,
                         ),
                       ),
@@ -181,13 +331,15 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                           Text(
                             'Invested: \$${totalInvested.toStringAsFixed(2)}',
                             style: TextStyle(
-                              color: colorScheme.onPrimaryContainer.withValues(alpha: 0.7),
+                              color: colorScheme.onPrimaryContainer
+                                  .withValues(alpha: 0.7),
                               fontSize: 13,
                             ),
                           ),
                           const Spacer(),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: totalReturn >= 0
                                   ? Colors.green.shade800.withValues(alpha: 0.2)
@@ -197,15 +349,21 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                             child: Row(
                               children: [
                                 Icon(
-                                  totalReturn >= 0 ? Icons.trending_up : Icons.trending_down,
+                                  totalReturn >= 0
+                                      ? Icons.trending_up
+                                      : Icons.trending_down,
                                   size: 14,
-                                  color: totalReturn >= 0 ? Colors.green.shade400 : Colors.red.shade400,
+                                  color: totalReturn >= 0
+                                      ? Colors.green.shade400
+                                      : Colors.red.shade400,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${totalReturn >= 0 ? "+" : ""}${returnPercentage.toStringAsFixed(1)}%',
                                   style: TextStyle(
-                                    color: totalReturn >= 0 ? Colors.green.shade400 : Colors.red.shade400,
+                                    color: totalReturn >= 0
+                                        ? Colors.green.shade400
+                                        : Colors.red.shade400,
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -221,47 +379,7 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
               ),
             ),
 
-            // Ethical Investing Banner
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colorScheme.secondary.withValues(alpha: 0.3)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.gavel, color: colorScheme.secondary, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Shariah-Compliant Investment Guidelines',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: colorScheme.onSecondaryContainer,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'This portfolio tracks investments matching strict ethical guidelines: zero interest-bearing leverage, no gambling/speculative commodities, and strict exclusion of unethical sectors (alcohol, weapons, pork).',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
             // Investment List Title
             SliverToBoxAdapter(
@@ -286,7 +404,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                     final isProfit = asset.returnAmount >= 0;
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -294,11 +413,13 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                           children: [
                             Row(
                               children: [
-                                Text(asset.emoji, style: const TextStyle(fontSize: 28)),
+                                Text(asset.emoji,
+                                    style: const TextStyle(fontSize: 28)),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         asset.name,
@@ -309,10 +430,13 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                       ),
                                       const SizedBox(height: 2),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: colorScheme.surfaceContainerHighest,
-                                          borderRadius: BorderRadius.circular(4),
+                                          color: colorScheme
+                                              .surfaceContainerHighest,
+                                          borderRadius:
+                                              BorderRadius.circular(4),
                                         ),
                                         child: Text(
                                           asset.category.toUpperCase(),
@@ -329,7 +453,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                 IconButton(
                                   icon: const Icon(Icons.edit_note, size: 22),
                                   tooltip: 'Adjust Value',
-                                  onPressed: () => _showUpdateValueDialog(context, asset),
+                                  onPressed: () =>
+                                      _showUpdateValueDialog(context, asset),
                                 ),
                               ],
                             ),
@@ -346,13 +471,16 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                       'Amount Invested',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                        color: colorScheme.onSurface
+                                            .withValues(alpha: 0.5),
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       '\$${asset.amountInvested.toStringAsFixed(2)}',
-                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13),
                                     ),
                                   ],
                                 ),
@@ -363,7 +491,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                       'Current Value',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                        color: colorScheme.onSurface
+                                            .withValues(alpha: 0.5),
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -384,7 +513,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                       'Net Return',
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                        color: colorScheme.onSurface
+                                            .withValues(alpha: 0.5),
                                       ),
                                     ),
                                     const SizedBox(height: 2),
@@ -393,7 +523,9 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
-                                        color: isProfit ? Colors.green.shade600 : Colors.red.shade600,
+                                        color: isProfit
+                                            ? Colors.green.shade600
+                                            : Colors.red.shade600,
                                       ),
                                     ),
                                   ],
@@ -405,10 +537,10 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                       ),
                     );
                   },
-                    childCount: assets.length,
-                  ),
+                  childCount: assets.length,
                 ),
               ),
+            ),
           ],
         );
       },
@@ -416,7 +548,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
   }
 
   void _showUpdateValueDialog(BuildContext context, InvestmentAsset asset) {
-    final controller = TextEditingController(text: asset.currentValue.toString());
+    final controller =
+        TextEditingController(text: asset.currentValue.toString());
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -440,7 +573,9 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
             onPressed: () {
               final val = double.tryParse(controller.text) ?? 0.0;
               if (val > 0) {
-                ref.read(investmentProvider.notifier).updateCurrentValue(asset.id, val);
+                ref
+                    .read(investmentProvider.notifier)
+                    .updateCurrentValue(asset.id, val);
               }
               Navigator.pop(ctx);
             },
@@ -467,14 +602,15 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setStateBuilder) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text('Add Ethical Investment'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<String>(
-                  value: category,
+                  initialValue: category,
                   decoration: const InputDecoration(
                     labelText: 'Asset Category',
                     border: OutlineInputBorder(),
@@ -504,7 +640,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                 const SizedBox(height: 12),
                 TextField(
                   controller: amtCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'Initial Invested Amount (USD)',
                     prefixText: '\$ ',
@@ -514,7 +651,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                 const SizedBox(height: 12),
                 TextField(
                   controller: valCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'Current Value (USD)',
                     prefixText: '\$ ',
@@ -587,7 +725,9 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: colorScheme.outline.withValues(alpha: 0.15)),
+                          border: Border.all(
+                              color:
+                                  colorScheme.outline.withValues(alpha: 0.15)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -596,7 +736,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                               'Lent (To Receive)',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -620,7 +761,9 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: colorScheme.outline.withValues(alpha: 0.15)),
+                          border: Border.all(
+                              color:
+                                  colorScheme.outline.withValues(alpha: 0.15)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -629,7 +772,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                               'Borrowed (To Pay)',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                color: colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -651,51 +795,7 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
               ),
             ),
 
-            // Benevolent Loan Notice
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.withValues(alpha: 0.07),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.teal.withValues(alpha: 0.2)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.favorite_border, color: Colors.teal, size: 20),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Qard Al-Hasan (Interest-Free)',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: Colors.teal,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'This is a benevolent tracker for interest-free lending. According to Islamic tradition, lending is an act of charity, and charging interest or penalty fees is strictly forbidden.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                height: 1.4,
-                                color: colorScheme.onSurface.withValues(alpha: 0.75),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
             // Loan List Title
             SliverToBoxAdapter(
@@ -734,20 +834,25 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                             direction: DismissDirection.endToStart,
                             background: Container(
                               margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 20),
                               decoration: BoxDecoration(
                                 color: Colors.redAccent.shade200,
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               alignment: Alignment.centerRight,
-                              child: const Icon(Icons.delete, color: Colors.white),
+                              child:
+                                  const Icon(Icons.delete, color: Colors.white),
                             ),
                             onDismissed: (_) {
-                              ref.read(loanProvider.notifier).deleteLoan(loan.id);
+                              ref
+                                  .read(loanProvider.notifier)
+                                  .deleteLoan(loan.id);
                             },
                             child: Card(
                               margin: const EdgeInsets.only(bottom: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
                                 child: Column(
@@ -757,28 +862,41 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                       children: [
                                         CircleAvatar(
                                           backgroundColor: isSettled
-                                              ? Colors.grey.withValues(alpha: 0.15)
-                                              : (isLent ? Colors.green.withValues(alpha: 0.15) : Colors.orange.withValues(alpha: 0.15)),
+                                              ? Colors.grey
+                                                  .withValues(alpha: 0.15)
+                                              : (isLent
+                                                  ? Colors.green
+                                                      .withValues(alpha: 0.15)
+                                                  : Colors.orange
+                                                      .withValues(alpha: 0.15)),
                                           foregroundColor: isSettled
                                               ? Colors.grey
-                                              : (isLent ? Colors.green.shade700 : Colors.orange.shade700),
+                                              : (isLent
+                                                  ? Colors.green.shade700
+                                                  : Colors.orange.shade700),
                                           child: Icon(
                                             isSettled
                                                 ? Icons.check
-                                                : (isLent ? Icons.arrow_outward : Icons.arrow_downward),
+                                                : (isLent
+                                                    ? Icons.arrow_outward
+                                                    : Icons.arrow_downward),
                                           ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 loan.personName,
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 15,
-                                                  decoration: isSettled ? TextDecoration.lineThrough : null,
+                                                  decoration: isSettled
+                                                      ? TextDecoration
+                                                          .lineThrough
+                                                      : null,
                                                 ),
                                               ),
                                               const SizedBox(height: 2),
@@ -790,7 +908,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                                         : 'Borrowed (Interest-free)'),
                                                 style: TextStyle(
                                                   fontSize: 11,
-                                                  color: colorScheme.onSurface.withValues(alpha: 0.55),
+                                                  color: colorScheme.onSurface
+                                                      .withValues(alpha: 0.55),
                                                 ),
                                               ),
                                             ],
@@ -798,11 +917,17 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                         ),
                                         if (!isSettled)
                                           TextButton.icon(
-                                            onPressed: () => _showRepaymentDialog(context, loan),
-                                            icon: const Icon(Icons.payment, size: 14),
-                                            label: Text(isLent ? 'Receive' : 'Pay'),
+                                            onPressed: () =>
+                                                _showRepaymentDialog(
+                                                    context, loan),
+                                            icon: const Icon(Icons.payment,
+                                                size: 14),
+                                            label: Text(
+                                                isLent ? 'Receive' : 'Pay'),
                                             style: TextButton.styleFrom(
-                                              foregroundColor: isLent ? Colors.green.shade700 : Colors.orange.shade800,
+                                              foregroundColor: isLent
+                                                  ? Colors.green.shade700
+                                                  : Colors.orange.shade800,
                                             ),
                                           ),
                                       ],
@@ -811,14 +936,19 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                     const Divider(height: 1),
                                     const SizedBox(height: 12),
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               'Total Qard',
-                                              style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.45)),
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: colorScheme.onSurface
+                                                      .withValues(alpha: 0.45)),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
@@ -826,17 +956,23 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.bold,
-                                                color: isSettled ? Colors.grey : colorScheme.onSurface,
+                                                color: isSettled
+                                                    ? Colors.grey
+                                                    : colorScheme.onSurface,
                                               ),
                                             ),
                                           ],
                                         ),
                                         Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               'Repaid',
-                                              style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.45)),
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: colorScheme.onSurface
+                                                      .withValues(alpha: 0.45)),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
@@ -844,17 +980,23 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w600,
-                                                color: isSettled ? Colors.grey : colorScheme.onSurface,
+                                                color: isSettled
+                                                    ? Colors.grey
+                                                    : colorScheme.onSurface,
                                               ),
                                             ),
                                           ],
                                         ),
                                         Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
                                           children: [
                                             Text(
                                               'Remaining Balance',
-                                              style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.45)),
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: colorScheme.onSurface
+                                                      .withValues(alpha: 0.45)),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
@@ -864,7 +1006,10 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                                 fontWeight: FontWeight.bold,
                                                 color: isSettled
                                                     ? Colors.grey
-                                                    : (isLent ? Colors.green.shade600 : Colors.orange.shade700),
+                                                    : (isLent
+                                                        ? Colors.green.shade600
+                                                        : Colors
+                                                            .orange.shade700),
                                               ),
                                             ),
                                           ],
@@ -877,8 +1022,11 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                                         width: double.infinity,
                                         padding: const EdgeInsets.all(8),
                                         decoration: BoxDecoration(
-                                          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                                          borderRadius: BorderRadius.circular(8),
+                                          color: colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.4),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
                                         ),
                                         child: Text(
                                           loan.notes,
@@ -914,7 +1062,9 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(isLent ? 'Record repayment from ${loan.personName}' : 'Record payment to ${loan.personName}'),
+        title: Text(isLent
+            ? 'Record repayment from ${loan.personName}'
+            : 'Record payment to ${loan.personName}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -926,7 +1076,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
             const SizedBox(height: 12),
             TextField(
               controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: 'Payment Amount (USD)',
                 prefixText: '\$ ',
@@ -965,7 +1116,8 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setStateBuilder) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text('Log Benevolent Qard'),
           content: SingleChildScrollView(
             child: Column(
@@ -995,14 +1147,17 @@ class _BusinessDashboardScreenState extends ConsumerState<BusinessDashboardScree
                 TextField(
                   controller: nameCtrl,
                   decoration: InputDecoration(
-                    labelText: type == LoanType.lent ? 'Lent to (Person Name)' : 'Borrowed from (Person Name)',
+                    labelText: type == LoanType.lent
+                        ? 'Lent to (Person Name)'
+                        : 'Borrowed from (Person Name)',
                     border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: amtCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'Loan Amount (USD)',
                     prefixText: '\$ ',

@@ -33,36 +33,7 @@ class SavingsDashboardScreen extends ConsumerWidget {
               ),
             ),
 
-            // Riba-free note
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: colorScheme.tertiary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: colorScheme.tertiary.withValues(alpha: 0.3)),
-                  ),
-                  child: Row(
-                    children: [
-                      Text('☪️', style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'All savings are interest-free (riba-free) in compliance with Islamic finance principles.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
             // Goals Header
             SliverToBoxAdapter(

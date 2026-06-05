@@ -47,7 +47,8 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
     });
     try {
       final repo = ref.read(quranRepositoryProvider);
-      final data = await repo.fetchAyah(_selectedSurah!.number, _selectedAyahNumber);
+      final data =
+          await repo.fetchAyah(_selectedSurah!.number, _selectedAyahNumber);
       if (mounted) {
         setState(() {
           _fetchedAyahText = data['text'] as String?;
@@ -58,7 +59,8 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _fetchError = "Failed to load ayah. Please check your internet connection.";
+          _fetchError =
+              "Failed to load ayah. Please check your internet connection.";
           _isLoadingAyah = false;
         });
       }
@@ -124,7 +126,9 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (_isQuranReminder && _fetchedAyahText == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please wait for the Quran verse to finish loading.')),
+        const SnackBar(
+            content:
+                Text('Please wait for the Quran verse to finish loading.')),
       );
       return;
     }
@@ -172,17 +176,23 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
               autofocus: true,
               enabled: !_isQuranReminder,
               decoration: InputDecoration(
-                labelText: _isQuranReminder ? 'Reminder title (Auto-generated)' : 'Reminder title',
-                hintText: _isQuranReminder ? 'Title will be Surah name & Ayah number' : 'e.g. Fajr Prayer, Read Quran...',
+                labelText: _isQuranReminder
+                    ? 'Reminder title (Auto-generated)'
+                    : 'Reminder title',
+                hintText: _isQuranReminder
+                    ? 'Title will be Surah name & Ayah number'
+                    : 'e.g. Fajr Prayer, Read Quran...',
                 prefixIcon: const Icon(Icons.edit_outlined),
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: colorScheme.surfaceContainerHighest,
               ),
               validator: (v) {
                 if (_isQuranReminder) return null;
-                return (v == null || v.trim().isEmpty) ? 'Title is required' : null;
+                return (v == null || v.trim().isEmpty)
+                    ? 'Title is required'
+                    : null;
               },
             ),
             const SizedBox(height: 20),
@@ -190,8 +200,10 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
             // Play Quran Verse Switch
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Play Quran Verse', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Play a specific Quran verse audio when this reminder is triggered'),
+              title: const Text('Play Quran Verse',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text(
+                  'Play a specific Quran verse audio when this reminder is triggered'),
               value: _isQuranReminder,
               onChanged: (val) {
                 setState(() {
@@ -210,9 +222,11 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
+                  side: BorderSide(
+                      color: colorScheme.outline.withValues(alpha: 0.2)),
                 ),
-                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color:
+                    colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -231,7 +245,8 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                             ),
                             data: (surahs) {
                               if (_selectedSurah == null && surahs.isNotEmpty) {
-                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                WidgetsBinding.instance
+                                    .addPostFrameCallback((_) {
                                   _onSurahChanged(surahs.first);
                                 });
                               }
@@ -241,9 +256,10 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  prefixIcon: const Icon(Icons.chrome_reader_mode),
+                                  prefixIcon:
+                                      const Icon(Icons.chrome_reader_mode),
                                 ),
-                                value: _selectedSurah,
+                                initialValue: _selectedSurah,
                                 items: surahs.map((surah) {
                                   return DropdownMenuItem<SurahModel>(
                                     value: surah,
@@ -270,9 +286,10 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
                                 ),
-                                value: _selectedAyahNumber,
+                                initialValue: _selectedAyahNumber,
                                 items: List.generate(
                                   _selectedSurah!.numberOfAyahs,
                                   (i) => i + 1,
@@ -295,11 +312,15 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
                                 ),
-                                value: _endAyahNumber ?? _selectedAyahNumber,
+                                initialValue:
+                                    _endAyahNumber ?? _selectedAyahNumber,
                                 items: List.generate(
-                                  _selectedSurah!.numberOfAyahs - _selectedAyahNumber + 1,
+                                  _selectedSurah!.numberOfAyahs -
+                                      _selectedAyahNumber +
+                                      1,
                                   (i) => _selectedAyahNumber + i,
                                 ).map((ayahNum) {
                                   return DropdownMenuItem<int>(
@@ -329,7 +350,8 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                                 children: [
                                   CircularProgressIndicator(),
                                   SizedBox(height: 10),
-                                  Text('Fetching verse text & audio...', style: TextStyle(fontSize: 12)),
+                                  Text('Fetching verse text & audio...',
+                                      style: TextStyle(fontSize: 12)),
                                 ],
                               ),
                             ),
@@ -338,7 +360,10 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                           Center(
                             child: Column(
                               children: [
-                                Text(_fetchError!, style: const TextStyle(color: Colors.red, fontSize: 13), textAlign: TextAlign.center),
+                                Text(_fetchError!,
+                                    style: const TextStyle(
+                                        color: Colors.red, fontSize: 13),
+                                    textAlign: TextAlign.center),
                                 TextButton.icon(
                                   onPressed: _fetchAyahDetails,
                                   icon: const Icon(Icons.refresh),
@@ -354,7 +379,9 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                             decoration: BoxDecoration(
                               color: colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
+                              border: Border.all(
+                                  color: colorScheme.primary
+                                      .withValues(alpha: 0.2)),
                             ),
                             child: Text(
                               _fetchedAyahText!,
@@ -371,25 +398,36 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                           if (_fetchedAudioUrl != null)
                             Center(
                               child: StreamBuilder<bool>(
-                                  stream: ref.watch(mediaPlaybackServiceProvider).playingStream,
+                                  stream: ref
+                                      .watch(mediaPlaybackServiceProvider)
+                                      .playingStream,
                                   builder: (context, snapshot) {
                                     final isPlaying = snapshot.data ?? false;
                                     return ElevatedButton.icon(
                                       onPressed: () async {
-                                        final mediaService = ref.read(mediaPlaybackServiceProvider);
+                                        final mediaService = ref
+                                            .read(mediaPlaybackServiceProvider);
                                         if (isPlaying) {
                                           await mediaService.pause();
                                         } else {
-                                          await mediaService.playAudioFromUrl(_fetchedAudioUrl!);
+                                          await mediaService.playAudioFromUrl(
+                                              _fetchedAudioUrl!);
                                         }
                                       },
-                                      icon: Icon(isPlaying ? Icons.stop : Icons.play_arrow),
-                                      label: Text(isPlaying ? 'Stop Preview' : 'Listen Preview'),
+                                      icon: Icon(isPlaying
+                                          ? Icons.stop
+                                          : Icons.play_arrow),
+                                      label: Text(isPlaying
+                                          ? 'Stop Preview'
+                                          : 'Listen Preview'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: colorScheme.secondaryContainer,
-                                        foregroundColor: colorScheme.onSecondaryContainer,
+                                        backgroundColor:
+                                            colorScheme.secondaryContainer,
+                                        foregroundColor:
+                                            colorScheme.onSecondaryContainer,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                         ),
                                       ),
                                     );
@@ -449,9 +487,10 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                 prefixIcon: const Icon(Icons.repeat),
                 filled: true,
                 fillColor: colorScheme.surfaceContainerHighest,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
-              value: _selectedRecurrence,
+              initialValue: _selectedRecurrence,
               items: const [
                 DropdownMenuItem(value: 'once', child: Text('Once')),
                 DropdownMenuItem(value: 'hourly', child: Text('Hourly')),
@@ -492,9 +531,10 @@ class _CreateReminderScreenState extends ConsumerState<CreateReminderScreen> {
                 ]
                     .map(
                       (preset) => ActionChip(
-                        label: Text(preset, style: const TextStyle(fontSize: 12)),
-                        onPressed: () => setState(
-                            () => _titleController.text = preset),
+                        label:
+                            Text(preset, style: const TextStyle(fontSize: 12)),
+                        onPressed: () =>
+                            setState(() => _titleController.text = preset),
                       ),
                     )
                     .toList(),
@@ -565,7 +605,8 @@ class _PickerTile extends StatelessWidget {
                   Text(label,
                       style: TextStyle(
                           fontSize: 11,
-                          color: colorScheme.onSurface.withValues(alpha: 0.55))),
+                          color:
+                              colorScheme.onSurface.withValues(alpha: 0.55))),
                   Text(value,
                       style: const TextStyle(
                           fontWeight: FontWeight.w600, fontSize: 13)),

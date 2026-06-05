@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../widgets/home_scaffold.dart';
 import '../../modules/general/reminder/presentation/screens/reminder_dashboard_screen.dart';
 import '../../modules/general/reminder/presentation/screens/create_reminder_screen.dart';
+import '../../modules/general/reminder/presentation/screens/all_reminders_screen.dart';
 import '../../modules/study/quran/presentation/screens/quran_home_screen.dart';
 import '../../modules/study/quran/presentation/screens/quran_audio_player_screen.dart';
 import '../../modules/business/presentation/screens/business_dashboard_screen.dart';
@@ -26,6 +27,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/create_reminder',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const CreateReminderScreen(),
+      ),
+      GoRoute(
+        path: '/all_reminders',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AllRemindersScreen(),
       ),
 
       // Bottom-nav shell

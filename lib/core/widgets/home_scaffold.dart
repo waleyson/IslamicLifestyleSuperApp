@@ -28,9 +28,9 @@ class HomeScaffold extends ConsumerWidget {
             Theme.of(context).colorScheme.secondary.withValues(alpha: 0.25),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.notifications_none_outlined),
-            selectedIcon: Icon(Icons.notifications),
-            label: 'Reminders',
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: 'Home',
           ),
           NavigationDestination(
             icon: Icon(Icons.menu_book_outlined),
