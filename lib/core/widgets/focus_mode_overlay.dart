@@ -156,7 +156,7 @@ class _FocusModeOverlayState extends ConsumerState<FocusModeOverlay> {
                               setState(() {
                                 _isDismissed = true;
                               });
-                              GoRouter.of(context).go('/quran');
+                              GoRouter.of(context).go('/study');
                             },
                             icon: const Icon(Icons.menu_book),
                             label: const Text("Read Quran"),

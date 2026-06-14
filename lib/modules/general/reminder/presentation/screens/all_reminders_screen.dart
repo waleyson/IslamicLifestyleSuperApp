@@ -234,6 +234,41 @@ class AllRemindersScreen extends ConsumerWidget {
                             },
                             activeThumbColor: colorScheme.primary,
                           ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                            tooltip: 'Delete Reminder',
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text("Delete Reminder"),
+                                  content: Text("Are you sure you want to delete \"${reminder.title}\"?"),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: const Text("Cancel"),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text("Delete", style: const TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                ref.read(reminderListProvider.notifier).deleteReminder(reminder.id);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('"${reminder.title}" deleted'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
                         ],
                       ),
                     ),
