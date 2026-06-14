@@ -8,6 +8,7 @@ import 'package:islamic_super_app/modules/business/savings/presentation/provider
 import 'package:islamic_super_app/modules/business/investment/presentation/providers/investment_provider.dart';
 import 'package:islamic_super_app/core/widgets/exit_dialog.dart';
 import 'package:islamic_super_app/modules/general/prayer_times/presentation/widgets/prayer_times_card.dart';
+import 'package:islamic_super_app/modules/study/azkar/presentation/providers/daily_target_provider.dart';
 
 class ReminderDashboardScreen extends ConsumerWidget {
   const ReminderDashboardScreen({super.key});
@@ -128,6 +129,11 @@ class ReminderDashboardScreen extends ConsumerWidget {
             // 2. Verse of the Day Card (Visual & Clean)
             _buildVerseCard(colorScheme, verse),
             
+            const SizedBox(height: 20),
+
+            // Daily Spiritual Goals Progress Card
+            _buildDailyGoalsProgressCard(context, colorScheme, ref),
+
             const SizedBox(height: 24),
 
             // 3. Quick Actions Header & Grid
@@ -295,6 +301,93 @@ class ReminderDashboardScreen extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDailyGoalsProgressCard(BuildContext context, ColorScheme colorScheme, WidgetRef ref) {
+    final targetState = ref.watch(dailyTargetProvider);
+    final quranPercent = targetState.quranPagesTarget > 0 
+        ? (targetState.quranPagesRead / targetState.quranPagesTarget).clamp(0.0, 1.0) 
+        : 1.0;
+    final azkarPercent = targetState.azkarTarget > 0 
+        ? (targetState.azkarCompletedCount / targetState.azkarTarget).clamp(0.0, 1.0) 
+        : 1.0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.track_changes_rounded, size: 20, color: Color(0xFFD4AF37)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Daily Spiritual Goals',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.arrow_forward, size: 16),
+                onPressed: () => context.push('/daily_target'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Quran Pages Progress
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Quran Pages', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+              Text('${targetState.quranPagesRead}/${targetState.quranPagesTarget} pages', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: quranPercent,
+              minHeight: 6,
+              backgroundColor: colorScheme.outline.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
+            ),
+          ),
+          
+          const SizedBox(height: 14),
+
+          // Azkar Progress
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Azkar Recitations', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+              Text('${targetState.azkarCompletedCount}/${targetState.azkarTarget} sessions', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: azkarPercent,
+              minHeight: 6,
+              backgroundColor: colorScheme.outline.withValues(alpha: 0.1),
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFD4AF37)),
+            ),
           ),
         ],
       ),

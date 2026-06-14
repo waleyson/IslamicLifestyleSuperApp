@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:islamic_super_app/modules/general/reminder/presentation/providers/reminder_provider.dart';
+import 'package:islamic_super_app/modules/study/azkar/presentation/providers/azkar_schedule_provider.dart';
+import 'package:islamic_super_app/core/widgets/focus_mode_overlay.dart';
 
 class HomeScaffold extends ConsumerWidget {
   final Widget child;
@@ -18,9 +20,17 @@ class HomeScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Keep the periodic reminder trigger check active
     ref.watch(reminderSchedulerProvider);
+    
+    // Keep the periodic Azkar schedule check active
+    ref.watch(azkarScheduleProvider);
 
     return Scaffold(
-      body: child,
+      body: Stack(
+        children: [
+          child,
+          const FocusModeOverlay(),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: onNavigate,
@@ -41,6 +51,11 @@ class HomeScaffold extends ConsumerWidget {
             icon: Icon(Icons.business_center_outlined),
             selectedIcon: Icon(Icons.business_center),
             label: 'Business',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.auto_awesome_outlined),
+            selectedIcon: Icon(Icons.auto_awesome),
+            label: 'Azkar',
           ),
         ],
       ),

@@ -4,7 +4,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/router/app_router.dart';
-import 'modules/general/reminder/data/models/reminder_model.dart';
+import 'package:islamic_super_app/modules/study/azkar/data/models/azkar_schedule_model.dart';
+import 'package:islamic_super_app/modules/general/reminder/data/models/reminder_model.dart';
 import 'shared/services/notification_service.dart';
 
 void main() async {
@@ -13,6 +14,11 @@ void main() async {
   // Initialize Hive
   await Hive.initFlutter();
   Hive.registerAdapter(ReminderModelAdapter());
+  Hive.registerAdapter(AzkarScheduleModelAdapter());
+
+  // Open required Hive boxes
+  await Hive.openBox('daily_targets_box');
+  await Hive.openBox<AzkarScheduleModel>('azkar_schedules_box');
 
   // Initialize Notifications
   final notificationService = NotificationService();

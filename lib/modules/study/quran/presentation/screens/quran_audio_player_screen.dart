@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quran/quran.dart' as quran;
 import 'package:islamic_super_app/modules/study/quran/presentation/providers/quran_audio_provider.dart';
 import 'package:islamic_super_app/shared/services/media_playback_service.dart';
+import 'package:islamic_super_app/modules/study/azkar/presentation/providers/daily_target_provider.dart';
 
 class QuranAudioPlayerScreen extends ConsumerStatefulWidget {
   const QuranAudioPlayerScreen({super.key});
@@ -482,22 +483,28 @@ class _QuranAudioPlayerScreenState extends ConsumerState<QuranAudioPlayerScreen>
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.sync,
-                          size: 14,
-                          color: _autoScrollEnabled ? const Color(0xFFD4AF37) : Colors.white30,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _autoScrollEnabled ? "Auto-Scroll On" : "Auto-Scroll Off",
-                          style: TextStyle(
-                            color: _autoScrollEnabled ? const Color(0xFFD4AF37) : Colors.white30,
-                            fontSize: 12,
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(dailyTargetProvider.notifier).incrementQuranPages(1);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Masha'Allah! Logged 1 page read."),
+                            duration: Duration(seconds: 1),
                           ),
+                        );
+                      },
+                      icon: const Icon(Icons.menu_book, size: 14),
+                      label: const Text("+1 Page", style: TextStyle(fontSize: 11)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD4AF37),
+                        foregroundColor: const Color(0xFF071B11),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
