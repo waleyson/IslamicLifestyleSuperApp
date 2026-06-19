@@ -44,6 +44,17 @@ class _FocusModeOverlayState extends ConsumerState<FocusModeOverlay> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<DailyTargetState>(dailyTargetProvider, (previous, next) {
+      if (previous?.lastCheckedDate != next.lastCheckedDate) {
+        setState(() {
+          _isDismissed = false;
+          _countdown = 5;
+          _timer?.cancel();
+          _startCountdown();
+        });
+      }
+    });
+
     final targetState = ref.watch(dailyTargetProvider);
 
     // Hide overlay if goals are met or user skipped for this active session

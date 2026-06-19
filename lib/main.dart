@@ -19,6 +19,7 @@ void main() async {
   // Open required Hive boxes
   await Hive.openBox('daily_targets_box');
   await Hive.openBox<AzkarScheduleModel>('azkar_schedules_box');
+  await Hive.openBox<String>('quran_cache_box'); // Verse text + translation cache
 
   // Initialize Notifications
   final notificationService = NotificationService();

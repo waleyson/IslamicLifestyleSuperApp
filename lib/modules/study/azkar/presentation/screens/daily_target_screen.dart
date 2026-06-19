@@ -273,7 +273,7 @@ class _DailyTargetScreenState extends ConsumerState<DailyTargetScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      "Locks access to social media apps (Instagram, Facebook, TikTok, Twitter, Snapchat, Reddit) until you have met your daily reading and Azkar goals.",
+                      "Locks access to social media and messaging apps (WhatsApp, Instagram, Facebook, TikTok, Twitter, Telegram, Discord, YouTube, Snapchat, Reddit) until you have met your daily reading and Azkar goals.",
                       style: TextStyle(
                         fontSize: 13,
                         color: colorScheme.onSurfaceVariant,

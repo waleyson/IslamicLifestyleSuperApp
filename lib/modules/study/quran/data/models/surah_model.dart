@@ -1,33 +1,30 @@
 class SurahModel {
   final int number;
-  final String name;
-  final String englishName;
-  final String englishNameTranslation;
-  final int numberOfAyahs;
-  final String revelationType;
-  final String audioUrl;
+  final String name; // Arabic name (name_arabic)
+  final String englishName; // Romanized (name_simple)
+  final String englishNameTranslation; // translated_name.name
+  final int numberOfAyahs; // verses_count
+  final String revelationType; // revelation_place
 
-  SurahModel({
+  const SurahModel({
     required this.number,
     required this.name,
     required this.englishName,
     required this.englishNameTranslation,
     required this.numberOfAyahs,
     required this.revelationType,
-    required this.audioUrl,
   });
 
+  /// Parses the QuranCDN /chapters response shape.
   factory SurahModel.fromJson(Map<String, dynamic> json) {
-    final number = json['number'] as int;
+    final translatedName = json['translated_name'] as Map<String, dynamic>?;
     return SurahModel(
-      number: number,
-      name: json['name'] as String,
-      englishName: json['englishName'] as String,
-      englishNameTranslation: json['englishNameTranslation'] as String,
-      numberOfAyahs: json['numberOfAyahs'] as int,
-      revelationType: json['revelationType'] as String,
-      audioUrl:
-          'https://cdn.islamic.network/quran/audio/128/ar.alafasy/$number.mp3',
+      number: json['id'] as int? ?? 0,
+      name: json['name_arabic'] as String? ?? '',
+      englishName: json['name_simple'] as String? ?? '',
+      englishNameTranslation: translatedName?['name'] as String? ?? '',
+      numberOfAyahs: json['verses_count'] as int? ?? 0,
+      revelationType: json['revelation_place'] as String? ?? '',
     );
   }
 }

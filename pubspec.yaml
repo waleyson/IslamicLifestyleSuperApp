@@ -47,7 +47,8 @@ dependencies:
   flutter_secure_storage: ^10.2.0
   google_fonts: ^6.2.1
   adhan: ^2.0.0+1
-  quran: ^1.4.1
+  flutter_tts: ^4.2.0
+  path_provider: ^2.1.4
   muslim_data_flutter: ^1.4.1
 
 dev_dependencies:

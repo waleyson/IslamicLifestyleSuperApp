@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:islamic_super_app/shared/services/native_blocker_service.dart';
@@ -45,6 +46,7 @@ final dailyTargetProvider =
 
 class DailyTargetNotifier extends Notifier<DailyTargetState> {
   static const _boxName = 'daily_targets_box';
+  Timer? _timer;
 
   @override
   DailyTargetState build() {
@@ -78,7 +80,33 @@ class DailyTargetNotifier extends Notifier<DailyTargetState> {
     // Sync screen blocker to native OS level
     Future.microtask(() => _syncNativeBlockState(stateObj.isTargetMet));
 
+    _startResetTimer();
+
     return stateObj;
+  }
+
+  void _startResetTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 15), (_) => checkAndResetIfNewDay());
+    ref.onDispose(() {
+      _timer?.cancel();
+    });
+  }
+
+  void checkAndResetIfNewDay() {
+    final today = _getTodayString();
+    if (state.lastCheckedDate != today) {
+      final box = Hive.box(_boxName);
+      box.put('quranPagesRead', 0);
+      box.put('azkarCompletedCount', 0);
+      box.put('lastCheckedDate', today);
+
+      state = state.copyWith(
+        quranPagesRead: 0,
+        azkarCompletedCount: 0,
+        lastCheckedDate: today,
+      );
+      _syncNativeBlockState(state.isTargetMet);
+    }
   }
 
   String _getTodayString() {
@@ -95,6 +123,7 @@ class DailyTargetNotifier extends Notifier<DailyTargetState> {
 
   /// Increments pages read in Quran and syncs block status
   Future<void> incrementQuranPages(int pages) async {
+    checkAndResetIfNewDay();
     final box = Hive.box(_boxName);
     final newRead = state.quranPagesRead + pages;
     await box.put('quranPagesRead', newRead);
@@ -105,6 +134,7 @@ class DailyTargetNotifier extends Notifier<DailyTargetState> {
 
   /// Increments completed Azkar sessions and syncs block status
   Future<void> incrementAzkar() async {
+    checkAndResetIfNewDay();
     final box = Hive.box(_boxName);
     final newAzkar = state.azkarCompletedCount + 1;
     await box.put('azkarCompletedCount', newAzkar);
@@ -115,6 +145,7 @@ class DailyTargetNotifier extends Notifier<DailyTargetState> {
 
   /// Updates target configurations
   Future<void> updateTargets({required int quranTarget, required int azkarTarget}) async {
+    checkAndResetIfNewDay();
     final box = Hive.box(_boxName);
     await box.put('quranPagesTarget', quranTarget);
     await box.put('azkarTarget', azkarTarget);

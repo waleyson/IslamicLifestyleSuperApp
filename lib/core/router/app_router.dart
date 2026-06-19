@@ -8,6 +8,7 @@ import '../../modules/general/reminder/presentation/screens/create_reminder_scre
 import '../../modules/general/reminder/presentation/screens/all_reminders_screen.dart';
 import '../../modules/study/quran/presentation/screens/quran_home_screen.dart';
 import '../../modules/study/quran/presentation/screens/quran_audio_player_screen.dart';
+import '../../modules/study/quran/presentation/screens/quran_downloads_screen.dart';
 import '../../modules/business/presentation/screens/business_dashboard_screen.dart';
 
 // Azkar screen imports
@@ -29,6 +30,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/quran_player',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const QuranAudioPlayerScreen(),
+      ),
+      GoRoute(
+        path: '/quran_downloads',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const QuranDownloadsScreen(),
       ),
       GoRoute(
         path: '/create_reminder',

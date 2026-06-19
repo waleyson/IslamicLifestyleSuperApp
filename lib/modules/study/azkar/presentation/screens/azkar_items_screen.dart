@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:muslim_data_flutter/muslim_data_flutter.dart';
 import 'package:islamic_super_app/modules/study/azkar/presentation/providers/azkar_provider.dart';
 import 'package:islamic_super_app/modules/study/azkar/presentation/providers/daily_target_provider.dart';
@@ -13,33 +14,99 @@ class AzkarItemsScreen extends ConsumerStatefulWidget {
   ConsumerState<AzkarItemsScreen> createState() => _AzkarItemsScreenState();
 }
 
-class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
+class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen>
+    with TickerProviderStateMixin {
   final Map<int, int> _counts = {};
   bool _chapterCompleted = false;
+
+  // TTS state
+  late FlutterTts _tts;
+  int? _speakingItemId;
+  late AnimationController _waveController;
+
+  @override
+  void initState() {
+    super.initState();
+    _initTts();
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+  }
+
+  Future<void> _initTts() async {
+    _tts = FlutterTts();
+    await _tts.setLanguage('ar-SA');
+    await _tts.setSpeechRate(0.4);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+
+    _tts.setCompletionHandler(() {
+      if (mounted) {
+        setState(() => _speakingItemId = null);
+      }
+    });
+
+    _tts.setErrorHandler((msg) {
+      if (mounted) {
+        setState(() => _speakingItemId = null);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tts.stop();
+    _waveController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _toggleTts(AzkarItem item) async {
+    if (_speakingItemId == item.id) {
+      // Stop currently playing
+      await _tts.stop();
+      setState(() => _speakingItemId = null);
+    } else {
+      // Stop any previous speech
+      if (_speakingItemId != null) await _tts.stop();
+      setState(() => _speakingItemId = item.id);
+      await _tts.speak(item.item);
+    }
+  }
 
   /// Helper to parse repeat counts from supplication translations/references.
   int _getTargetCount(AzkarItem item) {
     final trans = item.translation.toLowerCase();
     final ref = item.reference.toLowerCase();
-    if (trans.contains("three times") || ref.contains("three times") || trans.contains("3 times")) return 3;
-    if (trans.contains("seven times") || ref.contains("seven times") || trans.contains("7 times")) return 7;
-    if (trans.contains("four times") || ref.contains("four times") || trans.contains("4 times")) return 4;
-    if (trans.contains("ten times") || ref.contains("ten times") || trans.contains("10 times")) return 10;
-    if (trans.contains("one hundred times") || trans.contains("100 times") || ref.contains("100 times")) return 100;
-    if (trans.contains("thirty three times") || trans.contains("33 times") || ref.contains("33 times")) return 33;
-    if (trans.contains("thirty-three times")) return 33;
-    return 1; // Default
+    if (trans.contains('three times') ||
+        ref.contains('three times') ||
+        trans.contains('3 times')) return 3;
+    if (trans.contains('seven times') ||
+        ref.contains('seven times') ||
+        trans.contains('7 times')) return 7;
+    if (trans.contains('four times') ||
+        ref.contains('four times') ||
+        trans.contains('4 times')) return 4;
+    if (trans.contains('ten times') ||
+        ref.contains('ten times') ||
+        trans.contains('10 times')) return 10;
+    if (trans.contains('one hundred times') ||
+        trans.contains('100 times') ||
+        ref.contains('100 times')) return 100;
+    if (trans.contains('thirty three times') ||
+        trans.contains('33 times') ||
+        ref.contains('33 times')) return 33;
+    if (trans.contains('thirty-three times')) return 33;
+    return 1;
   }
 
   void _onItemTapped(AzkarItem item, int target) {
     if (_chapterCompleted) return;
-
     final current = _counts[item.id] ?? 0;
     if (current < target) {
       setState(() {
         _counts[item.id] = current + 1;
       });
-      // Check if this action completes the whole chapter
       _checkCompletion();
     }
   }
@@ -61,14 +128,14 @@ class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
         setState(() {
           _chapterCompleted = true;
         });
-        
-        // Add to daily target provider
+
         await ref.read(dailyTargetProvider.notifier).incrementAzkar();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text("Masha'Allah! Category completed! Daily target updated!"),
+              content:
+                  Text("Masha'Allah! Category completed! Daily target updated!"),
               backgroundColor: Colors.teal,
               duration: Duration(seconds: 4),
             ),
@@ -116,12 +183,12 @@ class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
                       const Icon(Icons.stars, color: Colors.green),
                       const SizedBox(width: 8),
                       Text(
-                        "Chapter Completed! +1 Daily Session Earned",
+                        'Chapter Completed! +1 Daily Session Earned',
                         style: TextStyle(
                           color: colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -129,19 +196,23 @@ class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
                 child: ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: items.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final item = items[index];
                     final target = _getTargetCount(item);
                     final current = _counts[item.id] ?? 0;
                     final isDone = current >= target;
+                    final isSpeaking = _speakingItemId == item.id;
 
                     return Card(
                       elevation: isDone ? 0.5 : 2,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                         side: BorderSide(
-                          color: isDone ? Colors.green.withValues(alpha: 0.3) : Colors.transparent,
+                          color: isDone
+                              ? Colors.green.withValues(alpha: 0.3)
+                              : Colors.transparent,
                           width: 1.5,
                         ),
                       ),
@@ -150,17 +221,65 @@ class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Arabic Text
-                            Text(
-                              item.item,
-                              textAlign: TextAlign.right,
-                              textDirection: TextDirection.rtl,
-                              style: const TextStyle(
-                                fontSize: 26,
-                                height: 1.8,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Amiri',
-                              ),
+                            // Arabic Text with TTS button
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item.item,
+                                    textAlign: TextAlign.right,
+                                    textDirection: TextDirection.rtl,
+                                    style: const TextStyle(
+                                      fontSize: 26,
+                                      height: 1.8,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Amiri',
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // TTS Speaker Button
+                                GestureDetector(
+                                  onTap: () => _toggleTts(item),
+                                  child: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: isSpeaking
+                                          ? const Color(0xFF009688)
+                                              .withValues(alpha: 0.15)
+                                          : colorScheme.surfaceContainerHighest,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: isSpeaking
+                                            ? const Color(0xFF009688)
+                                            : colorScheme.outline
+                                                .withValues(alpha: 0.3),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    child: isSpeaking
+                                        ? AnimatedBuilder(
+                                            animation: _waveController,
+                                            builder: (ctx, child) => Icon(
+                                              Icons.graphic_eq_rounded,
+                                              color: Color.lerp(
+                                                const Color(0xFF009688),
+                                                const Color(0xFFFFD700),
+                                                _waveController.value,
+                                              ),
+                                              size: 20,
+                                            ),
+                                          )
+                                        : Icon(
+                                            Icons.volume_up_rounded,
+                                            color: colorScheme.primary,
+                                            size: 20,
+                                          ),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 16),
                             // Translation
@@ -169,27 +288,30 @@ class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
                               style: TextStyle(
                                 fontSize: 14,
                                 height: 1.4,
-                                color: colorScheme.onSurface.withValues(alpha: 0.8),
+                                color: colorScheme.onSurface
+                                    .withValues(alpha: 0.8),
                               ),
                             ),
                             const SizedBox(height: 10),
                             // Reference
                             if (item.reference.isNotEmpty)
                               Text(
-                                "Source: ${item.reference}",
+                                'Source: ${item.reference}',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontStyle: FontStyle.italic,
-                                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.6),
                                 ),
                               ),
                             const SizedBox(height: 20),
                             // Counter Row
                             Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Target: ×$target",
+                                  'Target: ×$target',
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -199,14 +321,18 @@ class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
                                 GestureDetector(
                                   onTap: () => _onItemTapped(item, target),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 10),
                                     decoration: BoxDecoration(
                                       color: isDone
                                           ? Colors.green.withValues(alpha: 0.15)
-                                          : colorScheme.primary.withValues(alpha: 0.1),
+                                          : colorScheme.primary
+                                              .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(30),
                                       border: Border.all(
-                                        color: isDone ? Colors.green : colorScheme.primary,
+                                        color: isDone
+                                            ? Colors.green
+                                            : colorScheme.primary,
                                         width: 1,
                                       ),
                                     ),
@@ -214,16 +340,24 @@ class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          isDone ? Icons.check : Icons.touch_app,
+                                          isDone
+                                              ? Icons.check
+                                              : Icons.touch_app,
                                           size: 16,
-                                          color: isDone ? Colors.green : colorScheme.primary,
+                                          color: isDone
+                                              ? Colors.green
+                                              : colorScheme.primary,
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          isDone ? "Done" : "$current / $target",
+                                          isDone
+                                              ? 'Done'
+                                              : '$current / $target',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            color: isDone ? Colors.green : colorScheme.primary,
+                                            color: isDone
+                                                ? Colors.green
+                                                : colorScheme.primary,
                                           ),
                                         ),
                                       ],
@@ -242,8 +376,10 @@ class _AzkarItemsScreenState extends ConsumerState<AzkarItemsScreen> {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error loading recitation: $err')),
+        loading: () =>
+            const Center(child: CircularProgressIndicator()),
+        error: (err, stack) =>
+            Center(child: Text('Error loading recitation: $err')),
       ),
     );
   }

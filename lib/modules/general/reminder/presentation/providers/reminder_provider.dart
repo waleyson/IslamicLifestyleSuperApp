@@ -42,6 +42,11 @@ class ReminderNotifier extends AsyncNotifier<List<ReminderModel>> {
     return box.values.toList();
   }
 
+  Future<void> refreshReminders() async {
+    final box = await Hive.openBox<ReminderModel>(_boxName);
+    state = AsyncData(box.values.toList());
+  }
+
   Future<void> addReminder(ReminderModel reminder) async {
     final box = await Hive.openBox<ReminderModel>(_boxName);
     await box.put(reminder.id, reminder);
@@ -160,7 +165,7 @@ final reminderSchedulerProvider = Provider<void>((ref) {
               }
             }
             await box.put(r.id, updated);
-            ref.read(reminderListProvider.notifier).state = AsyncData(box.values.toList());
+            await ref.read(reminderListProvider.notifier).refreshReminders();
           }
 
           // 2. Show notification

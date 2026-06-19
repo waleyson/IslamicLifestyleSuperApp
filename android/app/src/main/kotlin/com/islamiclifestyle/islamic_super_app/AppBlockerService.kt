@@ -53,7 +53,13 @@ class AppBlockerService : AccessibilityService() {
             "com.twitter.android",
             "com.zhiliaoapp.musically", // TikTok
             "com.snapchat.android",
-            "com.reddit.frontpage"
+            "com.reddit.frontpage",
+            "com.whatsapp",
+            "com.whatsapp.w4b",
+            "org.telegram.messenger",
+            "com.discord",
+            "com.facebook.orca",
+            "com.google.android.youtube"
         )
         return socialMediaPackages.contains(packageName)
     }
